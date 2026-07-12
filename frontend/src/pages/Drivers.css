@@ -463,6 +463,68 @@
     color: #e2e8f0;
     border: 1px solid rgba(148, 163, 184, 0.16);
 }
+
+.toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: min(380px, calc(100vw - 2rem));
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    animation: slideInRight 0.3s ease-out;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.45);
+}
+
+.toast-success {
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid rgba(16, 185, 129, 0.36);
+    color: #6ee7b7;
+}
+
+.toast-error {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fecaca;
+}
+
+.toast-close {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    opacity: 0.75;
+    transition: var(--transition-fast);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.toast-close:hover,
+.toast-close:focus-visible {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
 @media (max-width: 900px) {
     .driver-stats-grid {
         grid-template-columns: repeat(2, minmax(180px, 1fr));

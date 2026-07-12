@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit2, Trash2, Phone, Mail, Award, Truck, X, Star } from 'lucide-react';
+import { Plus, Edit2, Trash2, Phone, Mail, Award, Truck, X, Star, CheckCircle, AlertTriangle } from 'lucide-react';
 import api from '../services/api';
 import Table from '../components/common/Table';
 import Button from '../components/common/Button';
@@ -22,6 +22,22 @@ const initialFormState = {
     status: 'on_duty'
 };
 
+const Toast = ({ message, type, onClose }) => {
+    useEffect(() => {
+        const timer = setTimeout(onClose, 3500);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    return createPortal(
+        <div className={`toast toast-${type}`} role="status" aria-live="polite">
+            {type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+            <span>{message}</span>
+            <button className="toast-close" type="button" onClick={onClose} aria-label="Dismiss notification"><X size={14} /></button>
+        </div>,
+        document.body
+    );
+};
+
 const Drivers = () => {
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,6 +48,9 @@ const Drivers = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
     const [formData, setFormData] = useState(initialFormState);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = 'success') => setToast({ message, type });
 
     const fetchDrivers = async () => {
         try {
@@ -88,7 +107,7 @@ const Drivers = () => {
     const handleSubmit = async () => {
         try {
             if (!formData.name || !formData.licenseNumber || !formData.licenseExpiry) {
-                alert("Name, License Number and Expiry are required");
+                showToast("Name, License Number and Expiry are required", "error");
                 return;
             }
 
@@ -101,7 +120,7 @@ const Drivers = () => {
             setShowModal(false);
             fetchDrivers();
         } catch (err) {
-            alert(err.response?.data?.message || "Operation failed");
+            showToast(err.response?.data?.message || "Operation failed", "error");
         }
     };
 
@@ -112,7 +131,7 @@ const Drivers = () => {
             await api.delete(`/drivers/${id}`);
             fetchDrivers();
         } catch (err) {
-            alert(err.response?.data?.message || "Delete failed");
+            showToast(err.response?.data?.message || "Delete failed", "error");
         }
     };
 
@@ -379,6 +398,7 @@ const Drivers = () => {
                 </div>,
                 document.body
             )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 };
