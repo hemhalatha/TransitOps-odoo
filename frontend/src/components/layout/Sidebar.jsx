@@ -28,7 +28,7 @@ const Sidebar = () => {
     return (
         <aside className="sidebar glass-effect">
             <div className="sidebar-header">
-                <div className="sidebar-logo">Fleet<span>Flow</span></div>
+                <div className="sidebar-logo">transit<span>Ops</span></div>
             </div>
 
             <nav className="sidebar-nav">

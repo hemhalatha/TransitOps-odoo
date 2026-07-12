@@ -1,30 +1,52 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        type: "OAuth2",
-        user: process.env.EMAIL_USER,
-        clientId: process.env.EMAIL_CLIENT_ID,
-        clientSecret: process.env.EMAIL_CLIENT_SECRET,
-        refreshToken: process.env.EMAIL_REFRESH_TOKEN,
-    },
-});
+const requiredEmailEnvVars = [
+    "EMAIL_USER",
+    "EMAIL_CLIENT_ID",
+    "EMAIL_CLIENT_SECRET",
+    "EMAIL_REFRESH_TOKEN",
+];
 
-// Verify the connection configuration
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Error connecting to email server:", error.message);
-    } else {
-        console.log("Email server is ready to send messages");
+const isEmailConfigured = () =>
+    requiredEmailEnvVars.every((key) => {
+        const value = process.env[key];
+        return value && !value.startsWith("your_");
+    });
+
+let transporter;
+
+const getTransporter = () => {
+    if (!isEmailConfigured()) {
+        return null;
     }
-});
 
-// Core send function
+    if (!transporter) {
+        transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                type: "OAuth2",
+                user: process.env.EMAIL_USER,
+                clientId: process.env.EMAIL_CLIENT_ID,
+                clientSecret: process.env.EMAIL_CLIENT_SECRET,
+                refreshToken: process.env.EMAIL_REFRESH_TOKEN,
+            },
+        });
+    }
+
+    return transporter;
+};
+
 const sendEmail = async (to, subject, text, html) => {
+    const mailer = getTransporter();
+
+    if (!mailer) {
+        console.info("Email service is not configured; skipping email notification.");
+        return;
+    }
+
     try {
-        await transporter.sendMail({
+        await mailer.sendMail({
             from: `"transitOps" <${process.env.EMAIL_USER}>`,
             to,
             subject,
@@ -51,7 +73,6 @@ async function sendRegistrationEmail(email, name) {
         </div>
     `;
     await sendEmail(email, subject, text, html);
-    console.log("Registration email sent to:", email);
 }
 
 async function sendLoginEmail(email, name) {
@@ -70,10 +91,9 @@ async function sendLoginEmail(email, name) {
         </div>
     `;
     await sendEmail(email, subject, text, html);
-    console.log("Login email sent to:", email);
 }
 
-async function sendForgotPasswordEmail(email, name, resetToken) {
+async function sendForgotPasswordEmail(email, name) {
     const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
     const subject = "Password Reset - transitOps";
     const text = `Hello ${name}, a password reset was requested for your transitOps account on ${now}.`;
@@ -89,7 +109,6 @@ async function sendForgotPasswordEmail(email, name, resetToken) {
         </div>
     `;
     await sendEmail(email, subject, text, html);
-    console.log("Forgot password email sent to:", email);
 }
 
 module.exports = {
