@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Health check
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
     res.json({
         message: "Welcome to transitOps API 🚛",
         version: "1.0.0",
@@ -78,4 +78,5 @@ if (process.env.NODE_ENV === "production") {
 app.use(errorHandler);
 
 module.exports = app;
+
 

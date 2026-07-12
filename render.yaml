@@ -8,7 +8,7 @@ services:
     autoDeploy: true
     buildCommand: npm ci --prefix backend && npm ci --prefix frontend --include=dev && npm run build --prefix frontend
     startCommand: npm start --prefix backend
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,5 +20,6 @@ services:
         value: 20
       - key: MONGO_CONNECT_RETRY_DELAY_MS
         value: 2000
+
 
 
