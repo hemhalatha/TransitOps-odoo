@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createElement } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Edit2, Trash2, Search, Filter, X, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle, Fuel as FuelIcon, Receipt, DollarSign, Shield, MoreHorizontal } from 'lucide-react';
 import api from '../services/api';
@@ -63,14 +63,14 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 };
 
 // ── Stat Card ──
-const StatCard = ({ title, value, icon: Icon, color }) => (
+const StatCard = ({ title, value, icon, color }) => (
     <div className="glass-card stat-card-v">
         <div className="stat-content-v">
             <p className="stat-title-v">{title}</p>
             <h3 className="stat-value-v">{value}</h3>
         </div>
         <div className="stat-icon-v" style={{ backgroundColor: `${color}20`, color }}>
-            <Icon size={22} />
+            {createElement(icon, { size: 22 })}
         </div>
     </div>
 );

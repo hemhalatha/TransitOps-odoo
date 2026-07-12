@@ -12,6 +12,7 @@ transitOps is a full-stack fleet and logistics operations platform for managing 
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
 - [Local Development](#local-development)
 - [API Modules](#api-modules)
 - [Verification](#verification)
@@ -272,6 +273,12 @@ Frontend API configuration:
 | `VITE_API_URL` | Optional frontend API base URL. Use it when the backend is not available at the default API URL. |
 
 Do not commit `.env` files or production secrets.
+
+## Deployment
+
+The production deployment is hosted on Render:
+
+- Live app: [https://transitops-k2qw.onrender.com](https://transitops-k2qw.onrender.com)
 
 ## Local Development
 
