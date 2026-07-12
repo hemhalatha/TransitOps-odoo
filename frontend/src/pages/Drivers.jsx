@@ -128,9 +128,9 @@ const Drivers = () => {
     const renderRow = (driver) => (
         <tr key={driver._id}>
             <td>
-                <div className="vehicle-info">
-                    <p className="vehicle-name">{driver.name}</p>
-                    <p className="vehicle-model">
+                <div className="driver-info">
+                    <p className="driver-name">{driver.name}</p>
+                    <p className="driver-meta">
                         Trips: {driver.completedTrips}/{driver.totalTrips}
                     </p>
                 </div>
@@ -144,9 +144,9 @@ const Drivers = () => {
             </td>
 
             <td>
-                <code className="license-plate">{driver.licenseNumber}</code>
+                <code className="driver-license">{driver.licenseNumber}</code>
                 <br />
-                <small style={{ color: driver.isLicenseValid ? 'green' : 'red' }}>
+                <small className={`license-state ${driver.isLicenseValid ? 'valid' : 'expired'}`}>
                     {driver.isLicenseValid ? "Valid" : "Expired"}
                 </small>
             </td>
@@ -159,12 +159,12 @@ const Drivers = () => {
 
             <td>
                 {driver.assignedVehicle ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div className="assigned-vehicle">
                         <Truck size={14} />
                         {driver.assignedVehicle.name}
                     </div>
                 ) : (
-                    <span style={{ color: "#888" }}>—</span>
+                    <span className="driver-empty-value">—</span>
                 )}
             </td>
 
@@ -210,11 +210,14 @@ const Drivers = () => {
 
             <td>
                 <div className="table-actions">
-                    <button className="icon-btn edit" onClick={() => openEditModal(driver)}>
+                    <button className="icon-btn edit" type="button" title="Edit driver" aria-label={`Edit ${driver.name}`} onClick={() => openEditModal(driver)}>
                         <Edit2 size={16} />
                     </button>
                     <button
                         className="icon-btn delete"
+                        type="button"
+                        title="Delete driver"
+                        aria-label={`Delete ${driver.name}`}
                         onClick={() => handleDelete(driver._id)}
                     >
                         <Trash2 size={16} />
@@ -234,24 +237,24 @@ const Drivers = () => {
     const onTripCount = drivers.filter(d => d.status === 'on_trip').length;
 
     return (
-        <div className="vehicles-page animate-fade-in">
-            <div className="vehicle-stats-grid" style={{ marginBottom: '1.5rem' }}>
-                <div className="glass-card stat-card-v">
-                    <div className="stat-content-v">
-                        <p className="stat-title-v">Total Drivers</p>
-                        <h3 className="stat-value-v">{drivers.length}</h3>
+        <div className="drivers-page animate-fade-in">
+            <div className="driver-stats-grid" style={{ marginBottom: '1.5rem' }}>
+                <div className="glass-card driver-stat-card">
+                    <div className="driver-stat-content">
+                        <p className="driver-stat-title">Total Drivers</p>
+                        <h3 className="driver-stat-value">{drivers.length}</h3>
                     </div>
                 </div>
-                <div className="glass-card stat-card-v">
-                    <div className="stat-content-v">
-                        <p className="stat-title-v">On Trip</p>
-                        <h3 className="stat-value-v">{onTripCount}</h3>
+                <div className="glass-card driver-stat-card">
+                    <div className="driver-stat-content">
+                        <p className="driver-stat-title">On Trip</p>
+                        <h3 className="driver-stat-value">{onTripCount}</h3>
                     </div>
                 </div>
-                <div className="glass-card stat-card-v">
-                    <div className="stat-content-v">
-                        <p className="stat-title-v">Avg Rating</p>
-                        <h3 className="stat-value-v">
+                <div className="glass-card driver-stat-card">
+                    <div className="driver-stat-content">
+                        <p className="driver-stat-title">Avg Rating</p>
+                        <h3 className="driver-stat-value">
                             <Star size={18} fill="#fbbf24" color="#fbbf24" style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
                             {avgRating}
                         </h3>
@@ -302,7 +305,7 @@ const Drivers = () => {
                     <div className="modal">
                         <div className="modal-header">
                             <h3>{editingDriver ? "Edit Driver" : "Add Driver"}</h3>
-                            <X size={18} onClick={() => setShowModal(false)} style={{ cursor: "pointer" }} />
+                            <button className="driver-modal-close" type="button" onClick={() => setShowModal(false)} aria-label="Close driver form"><X size={18} /></button>
                         </div>
 
                         <div className="form-group">

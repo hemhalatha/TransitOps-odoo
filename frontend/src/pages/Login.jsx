@@ -39,7 +39,7 @@ const Login = () => {
         <div className="auth-container">
             <div className="auth-card glass-effect animate-fade-in">
                 <div className="auth-header">
-                    <div className="auth-logo">Fleet<span>Flow</span></div>
+                    <div className="auth-logo">Transit<span>Ops</span></div>
                     <h1>Welcome Back</h1>
                     <p>Sign in to manage your fleet</p>
                 </div>
