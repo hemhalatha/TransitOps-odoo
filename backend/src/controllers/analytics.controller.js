@@ -1,6 +1,8 @@
 const Vehicle = require("../models/vehicle.model");
 const Maintenance = require("../models/maintenance.model");
 const exportService = require("../services/export.service");
+const { getApprovedExpenseMatch } = require("./expense.controller");
+const { APPROVAL_STATUS } = require("../utils/constants");
 
 // Safely import Trip & Expense models (may not exist yet in early phases)
 let Trip, Expense;
@@ -140,6 +142,7 @@ async function getFuelEfficiency(req, res) {
                             vehicle: vehicle._id,
                             type: "fuel",
                             liters: { $exists: true, $gt: 0 },
+                            ...getApprovedExpenseMatch(),
                             ...dateFilterExpense,
                         },
                     },
@@ -210,7 +213,7 @@ async function getVehicleROI(req, res) {
             let otherExpenses = 0;
             if (Expense) {
                 const expAgg = await Expense.aggregate([
-                    { $match: { vehicle: vehicle._id, ...dateFilterExpense } },
+                    { $match: { vehicle: vehicle._id, ...getApprovedExpenseMatch(), ...dateFilterExpense } },
                     {
                         $group: {
                             _id: "$type",
@@ -313,7 +316,7 @@ async function getCostPerKm(req, res) {
             let fuelCost = 0;
             if (Expense) {
                 const fuelAgg = await Expense.aggregate([
-                    { $match: { vehicle: vehicle._id, type: "fuel", ...dateFilterExpense } },
+                    { $match: { vehicle: vehicle._id, type: "fuel", ...getApprovedExpenseMatch(), ...dateFilterExpense } },
                     { $group: { _id: null, total: { $sum: "$amount" } } },
                 ]);
                 fuelCost = fuelAgg.length > 0 ? fuelAgg[0].total : 0;
@@ -464,7 +467,7 @@ async function exportReport(req, res) {
                     });
                 }
                 try {
-                    const expenses = await Expense.find()
+                    const expenses = await Expense.find(getApprovedExpenseMatch())
                         .populate("vehicle", "name licensePlate")
                         .lean();
                     const flat = expenses.map((e) => ({

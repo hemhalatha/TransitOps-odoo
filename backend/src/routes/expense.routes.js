@@ -7,7 +7,13 @@ const validate = require("../validators/validate");
 
 const expenseRoles = ["manager", "financial_analyst", "dispatcher"];
 
-// GET /api/expenses
+router.get(
+    "/pending",
+    authMiddleware,
+    authorize("manager", "financial_analyst"),
+    expenseController.getPendingExpenses
+);
+
 router.get(
     "/",
     authMiddleware,
@@ -15,7 +21,6 @@ router.get(
     expenseController.getAllExpenses
 );
 
-// POST /api/expenses
 router.post(
     "/",
     authMiddleware,
@@ -25,23 +30,6 @@ router.post(
     expenseController.createExpense
 );
 
-// GET /api/expenses — Global list with filters & pagination
-router.get(
-    "/",
-    authMiddleware,
-    authorize(...expenseRoles),
-    expenseController.getAllExpenses
-);
-
-// GET /api/expenses/vehicle/:vehicleId
-router.get(
-    "/vehicle/:vehicleId",
-    authMiddleware,
-    authorize(...expenseRoles),
-    expenseController.getExpensesByVehicle
-);
-
-// GET /api/expenses/vehicle/:vehicleId/total
 router.get(
     "/vehicle/:vehicleId/total",
     authMiddleware,
@@ -49,7 +37,27 @@ router.get(
     expenseController.getTotalCostPerVehicle
 );
 
-// PUT /api/expenses/:id
+router.get(
+    "/vehicle/:vehicleId",
+    authMiddleware,
+    authorize(...expenseRoles),
+    expenseController.getExpensesByVehicle
+);
+
+router.patch(
+    "/:id/approve",
+    authMiddleware,
+    authorize("manager"),
+    expenseController.approveExpense
+);
+
+router.patch(
+    "/:id/reject",
+    authMiddleware,
+    authorize("manager"),
+    expenseController.rejectExpense
+);
+
 router.put(
     "/:id",
     authMiddleware,
@@ -59,7 +67,6 @@ router.put(
     expenseController.updateExpense
 );
 
-// DELETE /api/expenses/:id
 router.delete(
     "/:id",
     authMiddleware,

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { EXPENSE_TYPES_ARRAY } = require("../utils/constants");
+const { EXPENSE_TYPES_ARRAY, APPROVAL_STATUS_ARRAY } = require("../utils/constants");
 
 const expenseSchema = new mongoose.Schema(
     {
@@ -43,6 +43,28 @@ const expenseSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        approvalStatus: {
+            type: String,
+            enum: {
+                values: APPROVAL_STATUS_ARRAY,
+                message: "{VALUE} is not a valid approval status",
+            },
+            default: "approved",
+        },
+        approvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
+        approvedAt: {
+            type: Date,
+            default: null,
+        },
+        rejectionReason: {
+            type: String,
+            trim: true,
+            default: null,
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -54,10 +76,10 @@ const expenseSchema = new mongoose.Schema(
     }
 );
 
-// Indexes for common queries
 expenseSchema.index({ vehicle: 1, type: 1 });
 expenseSchema.index({ trip: 1 });
 expenseSchema.index({ date: -1 });
+expenseSchema.index({ approvalStatus: 1 });
 
 const Expense = mongoose.model("Expense", expenseSchema);
 

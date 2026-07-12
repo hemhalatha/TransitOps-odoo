@@ -1,4 +1,7 @@
 const Driver = require("../models/driver.model");
+const { recordAudit } = require("../services/auditLog.service");
+const { getReassignmentSuggestions } = require("../services/reassignment.service");
+const { AUDIT_ENTITY_TYPES, DRIVER_STATUS } = require("../utils/constants");
 
 // CREATE
 exports.createDriver = async (req, res) => {
@@ -8,6 +11,16 @@ exports.createDriver = async (req, res) => {
       createdBy: req.user._id
     });
     await driver.save();
+
+    await recordAudit({
+      entityType: AUDIT_ENTITY_TYPES.DRIVER,
+      entityId: driver._id,
+      action: "driver.created",
+      description: `Driver ${driver.name} created`,
+      performedBy: req.user._id,
+      metadata: { licenseNumber: driver.licenseNumber, status: driver.status },
+    });
+
     res.status(201).json({
       status: true,
       message: "Driver created successfully",
@@ -76,17 +89,45 @@ exports.getDriverById = async (req, res) => {
 // UPDATE
 exports.updateDriver = async (req, res) => {
   try {
+    const existing = await Driver.findById(req.params.id);
+    if (!existing) return res.status(404).json({ status: false, message: "Driver not found" });
+
+    const wasSuspended = existing.status !== DRIVER_STATUS.SUSPENDED && req.body.status === DRIVER_STATUS.SUSPENDED;
+
     const driver = await Driver.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
-    if (!driver) return res.status(404).json({ status: false, message: "Driver not found" });
-    res.json({
-      status: true,
-      message: "Driver updated successfully",
-      driver
+
+    await recordAudit({
+      entityType: AUDIT_ENTITY_TYPES.DRIVER,
+      entityId: driver._id,
+      action: wasSuspended ? "driver.suspended" : "driver.updated",
+      description: wasSuspended
+        ? `Driver ${driver.name} suspended`
+        : `Driver ${driver.name} updated`,
+      performedBy: req.user._id,
+      metadata: {
+        previousStatus: existing.status,
+        newStatus: driver.status,
+        safetyScore: driver.safetyScore,
+      },
     });
+
+    const response = {
+      status: true,
+      message: wasSuspended ? "Driver suspended successfully" : "Driver updated successfully",
+      driver,
+    };
+
+    if (wasSuspended) {
+      response.reassignmentSuggestions = await getReassignmentSuggestions({
+        excludeDriverId: driver._id,
+      });
+    }
+
+    res.json(response);
   } catch (err) {
     res.status(400).json({ status: false, message: err.message });
   }

@@ -2,7 +2,9 @@ const Trip = require("../models/trip.model");
 const Vehicle = require("../models/vehicle.model");
 const Driver = require("../models/driver.model");
 const { getSettings } = require("../services/settings.service");
-const { VEHICLE_STATUS, DRIVER_STATUS, TRIP_STATUS } = require("../utils/constants");
+const { recordAudit } = require("../services/auditLog.service");
+const { getReassignmentSuggestions } = require("../services/reassignment.service");
+const { VEHICLE_STATUS, DRIVER_STATUS, TRIP_STATUS, AUDIT_ENTITY_TYPES } = require("../utils/constants");
 
 async function validateDriverForAssignment(driverDoc, settings) {
     if (driverDoc.status === DRIVER_STATUS.SUSPENDED) {
@@ -74,6 +76,20 @@ async function createTrip(req, res) {
         });
 
         await trip.save();
+
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.TRIP,
+            entityId: trip._id,
+            action: "trip.created",
+            description: `Trip created from ${origin} to ${destination}`,
+            performedBy: req.user._id,
+            metadata: {
+                vehicleId: vehicleDoc._id,
+                driverId: driverDoc._id,
+                cargoWeight,
+                status: TRIP_STATUS.DRAFT,
+            },
+        });
 
         const populated = await Trip.findById(trip._id)
             .populate("vehicle", "name licensePlate type maxCapacity")
@@ -256,18 +272,39 @@ async function updateTripStatus(req, res) {
                 return res.status(400).json({ message: driverError, status: false });
             }
 
-            // Update trip
             trip.status = TRIP_STATUS.DISPATCHED;
             trip.startDate = new Date();
             trip.startOdometer = vehicle.currentOdometer;
 
-            // Update vehicle & driver
             vehicle.status = VEHICLE_STATUS.ON_TRIP;
             driver.status = DRIVER_STATUS.ON_TRIP;
             driver.assignedVehicle = vehicle._id;
             driver.totalTrips += 1;
 
             await Promise.all([trip.save(), vehicle.save(), driver.save()]);
+
+            await Promise.all([
+                recordAudit({
+                    entityType: AUDIT_ENTITY_TYPES.TRIP,
+                    entityId: trip._id,
+                    action: "trip.dispatched",
+                    description: `Trip dispatched from ${trip.origin} to ${trip.destination}`,
+                    performedBy: req.user._id,
+                    metadata: {
+                        vehicleId: vehicle._id,
+                        driverId: driver._id,
+                        driverName: driver.name,
+                    },
+                }),
+                recordAudit({
+                    entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+                    entityId: vehicle._id,
+                    action: "vehicle.status_changed",
+                    description: `Vehicle ${vehicle.licensePlate} moved to On Trip`,
+                    performedBy: req.user._id,
+                    metadata: { previousStatus: VEHICLE_STATUS.AVAILABLE, newStatus: VEHICLE_STATUS.ON_TRIP, tripId: trip._id },
+                }),
+            ]);
         }
 
         // 2. COMPLETE: Dispatched -> Completed
@@ -303,15 +340,38 @@ async function updateTripStatus(req, res) {
             }
 
             await Promise.all([trip.save(), vehicle.save(), driver.save()]);
-        }
 
-        // 3. CANCEL: Draft/Dispatched -> Cancelled
+            await Promise.all([
+                recordAudit({
+                    entityType: AUDIT_ENTITY_TYPES.TRIP,
+                    entityId: trip._id,
+                    action: "trip.completed",
+                    description: `Trip completed from ${trip.origin} to ${trip.destination}`,
+                    performedBy: req.user._id,
+                    metadata: {
+                        endOdometer,
+                        vehicleId: vehicle._id,
+                        driverId: driver._id,
+                    },
+                }),
+                recordAudit({
+                    entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+                    entityId: vehicle._id,
+                    action: "vehicle.status_changed",
+                    description: `Vehicle ${vehicle.licensePlate} status changed to Available`,
+                    performedBy: req.user._id,
+                    metadata: { previousStatus: VEHICLE_STATUS.ON_TRIP, newStatus: VEHICLE_STATUS.AVAILABLE, tripId: trip._id },
+                }),
+            ]);
+        }
         else if (status === TRIP_STATUS.CANCELLED) {
             if (trip.status === TRIP_STATUS.COMPLETED) {
                 return res.status(400).json({ message: "Completed trips cannot be cancelled", status: false });
             }
 
-            if (trip.status === TRIP_STATUS.DISPATCHED) {
+            const wasDispatched = trip.status === TRIP_STATUS.DISPATCHED;
+
+            if (wasDispatched) {
                 const vehicle = await Vehicle.findById(trip.vehicle);
                 const driver = await Driver.findById(trip.driver);
 
@@ -321,10 +381,40 @@ async function updateTripStatus(req, res) {
                 driver.totalTrips = Math.max(0, driver.totalTrips - 1);
 
                 await Promise.all([vehicle.save(), driver.save()]);
+
+                await recordAudit({
+                    entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+                    entityId: vehicle._id,
+                    action: "vehicle.status_changed",
+                    description: `Vehicle ${vehicle.licensePlate} status changed to Available`,
+                    performedBy: req.user._id,
+                    metadata: { previousStatus: VEHICLE_STATUS.ON_TRIP, newStatus: VEHICLE_STATUS.AVAILABLE, tripId: trip._id },
+                });
             }
 
             trip.status = TRIP_STATUS.CANCELLED;
             await trip.save();
+
+            await recordAudit({
+                entityType: AUDIT_ENTITY_TYPES.TRIP,
+                entityId: trip._id,
+                action: "trip.cancelled",
+                description: `Trip cancelled (${trip.origin} to ${trip.destination})`,
+                performedBy: req.user._id,
+                metadata: { wasDispatched, cargoWeight: trip.cargoWeight },
+            });
+
+            const suggestions = await getReassignmentSuggestions({
+                tripId: trip._id,
+                cargoWeight: trip.cargoWeight,
+            });
+
+            return res.status(200).json({
+                message: `Trip status updated to ${status}`,
+                status: true,
+                trip,
+                reassignmentSuggestions: suggestions,
+            });
         }
 
         res.status(200).json({

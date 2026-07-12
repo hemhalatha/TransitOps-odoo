@@ -108,6 +108,25 @@ const NOTIFICATION_SEVERITY = {
 
 const NOTIFICATION_SEVERITY_ARRAY = Object.values(NOTIFICATION_SEVERITY);
 
+const AUDIT_ENTITY_TYPES = {
+    VEHICLE: "vehicle",
+    DRIVER: "driver",
+    TRIP: "trip",
+    MAINTENANCE: "maintenance",
+    EXPENSE: "expense",
+    SETTINGS: "settings",
+};
+
+const AUDIT_ENTITY_TYPES_ARRAY = Object.values(AUDIT_ENTITY_TYPES);
+
+const APPROVAL_STATUS = {
+    PENDING: "pending",
+    APPROVED: "approved",
+    REJECTED: "rejected",
+};
+
+const APPROVAL_STATUS_ARRAY = Object.values(APPROVAL_STATUS);
+
 module.exports = {
     USER_ROLES,
     USER_ROLES_ARRAY,
@@ -131,4 +150,8 @@ module.exports = {
     NOTIFICATION_TYPES_ARRAY,
     NOTIFICATION_SEVERITY,
     NOTIFICATION_SEVERITY_ARRAY,
+    AUDIT_ENTITY_TYPES,
+    AUDIT_ENTITY_TYPES_ARRAY,
+    APPROVAL_STATUS,
+    APPROVAL_STATUS_ARRAY,
 };

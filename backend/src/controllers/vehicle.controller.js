@@ -19,7 +19,8 @@
 // ==========================================
 
 const Vehicle = require("../models/vehicle.model");
-const { VEHICLE_STATUS } = require("../utils/constants");
+const { VEHICLE_STATUS, AUDIT_ENTITY_TYPES } = require("../utils/constants");
+const { recordAudit } = require("../services/auditLog.service");
 
 /**
  * POST /api/vehicles — Create a new vehicle
@@ -71,6 +72,15 @@ async function createVehicle(req, res) {
         });
 
         await vehicle.save();
+
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+            entityId: vehicle._id,
+            action: "vehicle.created",
+            description: `Vehicle ${vehicle.licensePlate} (${vehicle.name}) created`,
+            performedBy: req.user._id,
+            metadata: { type: vehicle.type, maxCapacity: vehicle.maxCapacity },
+        });
 
         res.status(201).json({
             message: "Vehicle created successfully",
@@ -297,6 +307,15 @@ async function updateVehicle(req, res) {
             });
         }
 
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+            entityId: vehicle._id,
+            action: "vehicle.updated",
+            description: `Vehicle ${vehicle.licensePlate} updated`,
+            performedBy: req.user._id,
+            metadata: { updatedFields: Object.keys(updates) },
+        });
+
         res.status(200).json({
             message: "Vehicle updated successfully",
             status: true,
@@ -448,9 +467,18 @@ async function updateVehicleStatus(req, res) {
             });
         }
 
-        // Apply the status change and persist
+        const previousStatus = vehicle.status;
         vehicle.status = status;
         await vehicle.save();
+
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+            entityId: vehicle._id,
+            action: "vehicle.status_changed",
+            description: `Vehicle ${vehicle.licensePlate} status changed to ${status}`,
+            performedBy: req.user._id,
+            metadata: { previousStatus, newStatus: status },
+        });
 
         res.status(200).json({
             message: `Vehicle status updated to '${status}'`,

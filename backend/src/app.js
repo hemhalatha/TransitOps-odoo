@@ -32,6 +32,8 @@ const dashboardRoutes = require("./routes/dashboard.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
 const settingsRoutes = require("./routes/settings.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const auditLogRoutes = require("./routes/auditLog.routes");
+const reassignmentRoutes = require("./routes/reassignment.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/vehicles", vehicleRoutes);
@@ -40,6 +42,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/reassignment", reassignmentRoutes);
 
 // P2 & P3 routes
 const driverRoutes = require("./routes/driver.routes");

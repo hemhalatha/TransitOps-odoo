@@ -13,7 +13,8 @@
 
 const Vehicle = require("../models/vehicle.model");
 const Maintenance = require("../models/maintenance.model");
-const { VEHICLE_STATUS, MAINTENANCE_STATUS } = require("../utils/constants");
+const { getAuditLogs } = require("../services/auditLog.service");
+const { VEHICLE_STATUS, MAINTENANCE_STATUS, APPROVAL_STATUS } = require("../utils/constants");
 
 /**
  * GET /api/dashboard — Main dashboard KPIs
@@ -102,16 +103,33 @@ async function getDashboardStats(req, res) {
         }
 
         // ── Expense Stats (safe import — P3 may not have pushed yet) ──
-        // Uses MongoDB aggregation to sum all expense amounts
         let totalExpenses = 0;
+        let pendingExpenseApprovals = [];
+        let pendingApprovalCount = 0;
         try {
             const Expense = require("../models/expense.model");
+            const { getApprovedExpenseMatch } = require("./expense.controller");
             const expenseAgg = await Expense.aggregate([
+                { $match: getApprovedExpenseMatch() },
                 { $group: { _id: null, total: { $sum: "$amount" } } },
             ]);
             totalExpenses = expenseAgg.length > 0 ? expenseAgg[0].total : 0;
+
+            pendingExpenseApprovals = await Expense.find({ approvalStatus: APPROVAL_STATUS.PENDING })
+                .sort({ createdAt: -1 })
+                .limit(5)
+                .populate("vehicle", "name licensePlate")
+                .populate("createdBy", "name email");
+            pendingApprovalCount = await Expense.countDocuments({ approvalStatus: APPROVAL_STATUS.PENDING });
         } catch (e) {
             // Expense model not available yet
+        }
+
+        let activityTimeline = [];
+        try {
+            activityTimeline = await getAuditLogs({ limit: 20 });
+        } catch (e) {
+            // Audit log not available yet
         }
 
         res.status(200).json({
@@ -140,6 +158,8 @@ async function getDashboardStats(req, res) {
                 },
                 expenses: {
                     total: totalExpenses,
+                    pendingApprovalCount,
+                    pendingApprovals: pendingExpenseApprovals,
                 },
                 monthlyStats: await (async () => {
                     const months = [];
@@ -158,6 +178,7 @@ async function getDashboardStats(req, res) {
                     try {
                         const Trip = require("../models/trip.model");
                         const Expense = require("../models/expense.model");
+                        const { getApprovedExpenseMatch } = require("./expense.controller");
 
                         const sixMonthsAgo = new Date();
                         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
@@ -175,7 +196,7 @@ async function getDashboardStats(req, res) {
                                 }
                             ]),
                             Expense.aggregate([
-                                { $match: { createdAt: { $gte: sixMonthsAgo } } },
+                                { $match: { createdAt: { $gte: sixMonthsAgo }, ...getApprovedExpenseMatch() } },
                                 {
                                     $group: {
                                         _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
@@ -198,6 +219,7 @@ async function getDashboardStats(req, res) {
                 })(),
                 recentTrips,
                 recentMaintenance,
+                activityTimeline,
             },
         });
     } catch (error) {

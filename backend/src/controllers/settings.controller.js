@@ -3,6 +3,8 @@ const {
     DEFAULT_SETTINGS,
     clearSettingsCache,
 } = require("../services/settings.service");
+const { recordAudit } = require("../services/auditLog.service");
+const { AUDIT_ENTITY_TYPES } = require("../utils/constants");
 
 const UPDATABLE_FIELDS = [
     "depotName",
@@ -47,6 +49,15 @@ async function updateSettings(req, res) {
         ).populate("updatedBy", "name email");
 
         clearSettingsCache();
+
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.SETTINGS,
+            entityId: settings._id,
+            action: "settings.updated",
+            description: "Organization settings updated",
+            performedBy: req.user._id,
+            metadata: { updatedFields: Object.keys(updates).filter((field) => field !== "updatedBy") },
+        });
 
         res.status(200).json({
             message: "Settings updated successfully",

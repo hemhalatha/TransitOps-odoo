@@ -18,7 +18,9 @@
 
 const Maintenance = require("../models/maintenance.model");
 const Vehicle = require("../models/vehicle.model");
-const { VEHICLE_STATUS, MAINTENANCE_STATUS } = require("../utils/constants");
+const { VEHICLE_STATUS, MAINTENANCE_STATUS, AUDIT_ENTITY_TYPES } = require("../utils/constants");
+const { recordAudit } = require("../services/auditLog.service");
+const { getReassignmentSuggestions } = require("../services/reassignment.service");
 
 /**
  * POST /api/maintenance — Create a maintenance log for a vehicle
@@ -72,10 +74,37 @@ async function createMaintenance(req, res) {
             .populate("vehicle", "name licensePlate type status")
             .populate("createdBy", "name email");
 
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.MAINTENANCE,
+            entityId: maintenance._id,
+            action: "maintenance.created",
+            description: `Maintenance scheduled for ${vehicleDoc.licensePlate} (${serviceType})`,
+            performedBy: req.user._id,
+            metadata: {
+                vehicleId: vehicleDoc._id,
+                serviceType,
+                cost,
+            },
+        });
+
+        await recordAudit({
+            entityType: AUDIT_ENTITY_TYPES.VEHICLE,
+            entityId: vehicleDoc._id,
+            action: "vehicle.status_changed",
+            description: `Vehicle ${vehicleDoc.licensePlate} moved to In Shop`,
+            performedBy: req.user._id,
+            metadata: { previousStatus: vehicleDoc.status, newStatus: VEHICLE_STATUS.IN_SHOP },
+        });
+
+        const reassignmentSuggestions = await getReassignmentSuggestions({
+            excludeVehicleId: vehicleDoc._id,
+        });
+
         res.status(201).json({
             message: "Maintenance log created. Vehicle status set to 'in_shop'.",
             status: true,
             maintenance: populated,
+            reassignmentSuggestions,
         });
     } catch (error) {
         console.error("Create maintenance error:", error);
@@ -254,6 +283,21 @@ async function updateMaintenance(req, res) {
             updates.status === MAINTENANCE_STATUS.COMPLETED
                 ? "Maintenance completed. Vehicle status set back to 'available'."
                 : "Maintenance record updated successfully";
+
+        if (updates.status === MAINTENANCE_STATUS.COMPLETED) {
+            await recordAudit({
+                entityType: AUDIT_ENTITY_TYPES.MAINTENANCE,
+                entityId: updated._id,
+                action: "maintenance.completed",
+                description: `Maintenance completed for ${updated.vehicle?.licensePlate || "vehicle"}`,
+                performedBy: req.user._id,
+                metadata: {
+                    vehicleId: updated.vehicle?._id,
+                    serviceType: updated.serviceType,
+                    cost: updated.cost,
+                },
+            });
+        }
 
         res.status(200).json({
             message,
