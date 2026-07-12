@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, Phone, Mail, Award, Truck, X, Star, CheckCircle, A
 import api from '../services/api';
 import Table from '../components/common/Table';
 import Button from '../components/common/Button';
+import { useAuth } from '../context/AuthContext';
 import './Drivers.css';
 
 const DRIVER_STATUSES = [
@@ -39,6 +40,8 @@ const Toast = ({ message, type, onClose }) => {
 };
 
 const Drivers = () => {
+    const { isManager } = useAuth();
+    const canManageDrivers = isManager();
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('');
@@ -86,12 +89,14 @@ const Drivers = () => {
     }, [search]);
 
     const openAddModal = () => {
+        if (!canManageDrivers) return;
         setEditingDriver(null);
         setFormData(initialFormState);
         setShowModal(true);
     };
 
     const openEditModal = (driver) => {
+        if (!canManageDrivers) return;
         setEditingDriver(driver);
         setFormData({
             name: driver.name,
@@ -105,6 +110,8 @@ const Drivers = () => {
     };
 
     const handleSubmit = async () => {
+        if (!canManageDrivers) return;
+
         try {
             if (!formData.name || !formData.licenseNumber || !formData.licenseExpiry) {
                 showToast("Name, License Number and Expiry are required", "error");
@@ -125,6 +132,7 @@ const Drivers = () => {
     };
 
     const handleDelete = async (id) => {
+        if (!canManageDrivers) return;
         if (!window.confirm("Are you sure you want to delete this driver?")) return;
 
         try {
@@ -142,7 +150,7 @@ const Drivers = () => {
         'Status',
         'Vehicle',
         'Performance',
-        'Actions'
+        ...(canManageDrivers ? ['Actions'] : [])
     ];
 
     const renderRow = (driver) => (
@@ -228,22 +236,24 @@ const Drivers = () => {
                 </div>
             </td>
 
-            <td>
-                <div className="table-actions">
-                    <button className="icon-btn edit" type="button" title="Edit driver" aria-label={`Edit ${driver.name}`} onClick={() => openEditModal(driver)}>
-                        <Edit2 size={16} />
-                    </button>
-                    <button
-                        className="icon-btn delete"
-                        type="button"
-                        title="Delete driver"
-                        aria-label={`Delete ${driver.name}`}
-                        onClick={() => handleDelete(driver._id)}
-                    >
-                        <Trash2 size={16} />
-                    </button>
-                </div>
-            </td>
+            {canManageDrivers && (
+                <td>
+                    <div className="table-actions">
+                        <button className="icon-btn edit" type="button" title="Edit driver" aria-label={`Edit ${driver.name}`} onClick={() => openEditModal(driver)}>
+                            <Edit2 size={16} />
+                        </button>
+                        <button
+                            className="icon-btn delete"
+                            type="button"
+                            title="Delete driver"
+                            aria-label={`Delete ${driver.name}`}
+                            onClick={() => handleDelete(driver._id)}
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                </td>
+            )}
         </tr>
     );
 
@@ -306,9 +316,11 @@ const Drivers = () => {
                     </select>
                 </div>
 
-                <Button icon={Plus} onClick={openAddModal}>
-                    Add Driver
-                </Button>
+                {canManageDrivers && (
+                    <Button icon={Plus} onClick={openAddModal}>
+                        Add Driver
+                    </Button>
+                )}
             </div>
 
             <Table

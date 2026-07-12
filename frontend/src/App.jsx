@@ -43,13 +43,21 @@ function App() {
             <Route path="/vehicles" element={<Vehicles />} />
           </Route>
 
-          {/* 🚛 Drivers, Trips — Manager + Dispatcher */}
+          {/* Drivers — all roles can view, Manager can CRUD */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['manager', 'dispatcher', 'safety_officer', 'financial_analyst']} />
+            }
+          >
+            <Route path="/drivers" element={<Drivers />} />
+          </Route>
+
+          {/* Trips — Manager + Dispatcher */}
           <Route
             element={
               <ProtectedRoute allowedRoles={['manager', 'dispatcher']} />
             }
           >
-            <Route path="/drivers" element={<Drivers />} />
             <Route path="/trips" element={<Trips />} />
           </Route>
 

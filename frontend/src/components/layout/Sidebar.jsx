@@ -17,7 +17,7 @@ import './Sidebar.css';
 const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { name: 'Fleet', icon: Truck, path: '/vehicles', roles: ['manager', 'dispatcher', 'safety_officer', 'financial_analyst'] },
-    { name: 'Drivers', icon: Users, path: '/drivers', roles: ['manager', 'dispatcher'] },
+    { name: 'Drivers', icon: Users, path: '/drivers', roles: ['manager', 'dispatcher', 'safety_officer', 'financial_analyst'] },
     { name: 'Trips', icon: MapPin, path: '/trips', roles: ['manager', 'dispatcher'] },
     { name: 'Fuel & Expenses', icon: Fuel, path: '/expenses', roles: ['manager', 'financial_analyst'] },
     { name: 'Maintenance', icon: Wrench, path: '/maintenance', roles: ['manager', 'safety_officer'] },

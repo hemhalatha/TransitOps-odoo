@@ -5,21 +5,21 @@ const { authMiddleware, authorize } = require("../middleware/auth.middleware");
 const { createDriverValidator, updateDriverValidator } = require("../validators/driver.validator");
 const validate = require("../validators/validate");
 
-const allRoles = ["manager", "dispatcher", "safety_officer"];
+const allRoles = ["manager", "dispatcher", "safety_officer", "financial_analyst"];
 
 // GET /api/drivers — list all drivers
 router.get(
     "/",
     authMiddleware,
-    authorize(...allRoles, "financial_analyst"),
+    authorize(...allRoles),
     driverController.getDrivers
 );
 
-// POST /api/drivers — manager or dispatcher
+// POST /api/drivers — manager only
 router.post(
     "/",
     authMiddleware,
-    authorize("manager", "dispatcher"),
+    authorize("manager"),
     createDriverValidator,
     validate,
     driverController.createDriver
@@ -29,7 +29,7 @@ router.post(
 router.get(
     "/:id/performance",
     authMiddleware,
-    authorize(...allRoles, "financial_analyst"),
+    authorize(...allRoles),
     driverController.getDriverPerformance
 );
 
@@ -37,15 +37,15 @@ router.get(
 router.get(
     "/:id",
     authMiddleware,
-    authorize(...allRoles, "financial_analyst"),
+    authorize(...allRoles),
     driverController.getDriverById
 );
 
-// PUT /api/drivers/:id — update driver
+// PUT /api/drivers/:id — manager only
 router.put(
     "/:id",
     authMiddleware,
-    authorize("manager", "dispatcher"),
+    authorize("manager"),
     updateDriverValidator,
     validate,
     driverController.updateDriver
