@@ -90,6 +90,24 @@ const FUEL_TYPES = {
 
 const FUEL_TYPES_ARRAY = Object.values(FUEL_TYPES);
 
+const NOTIFICATION_TYPES = {
+    LICENSE_EXPIRY: "license_expiry",
+    MAINTENANCE_OVERDUE: "maintenance_overdue",
+    FLEET_UTILIZATION: "fleet_utilization",
+    SAFETY_SCORE: "safety_score",
+    EXPENSE_APPROVAL: "expense_approval",
+};
+
+const NOTIFICATION_TYPES_ARRAY = Object.values(NOTIFICATION_TYPES);
+
+const NOTIFICATION_SEVERITY = {
+    INFO: "info",
+    WARNING: "warning",
+    CRITICAL: "critical",
+};
+
+const NOTIFICATION_SEVERITY_ARRAY = Object.values(NOTIFICATION_SEVERITY);
+
 module.exports = {
     USER_ROLES,
     USER_ROLES_ARRAY,
@@ -109,4 +127,8 @@ module.exports = {
     EXPENSE_TYPES_ARRAY,
     FUEL_TYPES,
     FUEL_TYPES_ARRAY,
+    NOTIFICATION_TYPES,
+    NOTIFICATION_TYPES_ARRAY,
+    NOTIFICATION_SEVERITY,
+    NOTIFICATION_SEVERITY_ARRAY,
 };

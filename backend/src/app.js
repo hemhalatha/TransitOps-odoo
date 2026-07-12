@@ -30,12 +30,16 @@ const vehicleRoutes = require("./routes/vehicle.routes");
 const maintenanceRoutes = require("./routes/maintenance.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
+const settingsRoutes = require("./routes/settings.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // P2 & P3 routes
 const driverRoutes = require("./routes/driver.routes");

@@ -39,6 +39,10 @@ const expenseSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        requiresApproval: {
+            type: Boolean,
+            default: false,
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

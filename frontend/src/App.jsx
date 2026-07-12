@@ -13,6 +13,7 @@ import Expenses from './pages/Expenses';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 import './components/layout/Layout.css';
 
 function App() {
@@ -26,10 +27,11 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* 🔐 Dashboard + Profile - All Logged Users */}
+          {/* 🔐 Dashboard, Profile, Notifications — All Logged Users */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/notifications" element={<Notifications />} />
           </Route>
 
           {/* 🚛 Vehicles — All roles can view, Manager can CRUD */}
@@ -72,12 +74,8 @@ function App() {
             <Route path="/analytics" element={<Analytics />} />
           </Route>
 
-          {/* ⚙️ Settings - Manager only */}
-          <Route
-            element={
-              <ProtectedRoute allowedRoles={['manager']} />
-            }
-          >
+          {/* ⚙️ Settings — all roles (manager can edit, others read-only) */}
+          <Route element={<ProtectedRoute />}>
             <Route path="/settings" element={<Settings />} />
           </Route>
           {/* 🔁 Fallback */}

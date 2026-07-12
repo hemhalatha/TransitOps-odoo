@@ -23,6 +23,14 @@ const { authMiddleware, authorize } = require("../middleware/auth.middleware");
 // Only managers and financial analysts can view analytics data
 const analyticsRoles = ["manager", "financial_analyst"];
 
+// GET /api/analytics/fleet-utilization — current operational fleet utilization
+router.get(
+    "/fleet-utilization",
+    authMiddleware,
+    authorize(...analyticsRoles),
+    analyticsController.getFleetUtilization
+);
+
 // GET /api/analytics/fuel-efficiency — Fuel efficiency report
 router.get(
     "/fuel-efficiency",

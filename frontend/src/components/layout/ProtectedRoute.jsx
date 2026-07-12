@@ -11,6 +11,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
     const getTitle = () => {
         const path = location.pathname;
         if (path === '/') return 'Dashboard';
+        if (path === '/notifications') return 'Notifications';
         const name = path.substring(1);
         return name.charAt(0).toUpperCase() + name.slice(1);
     };

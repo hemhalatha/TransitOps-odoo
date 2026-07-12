@@ -8,6 +8,7 @@ import {
     Wrench,
     BarChart3,
     Settings,
+    Bell,
     LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +25,7 @@ const Sidebar = () => {
         { name: 'Fuel & Expenses', icon: Fuel, path: '/expenses' },
         { name: 'Maintenance', icon: Wrench, path: '/maintenance' },
         { name: 'Analytics', icon: BarChart3, path: '/analytics' },
+        { name: 'Notifications', icon: Bell, path: '/notifications' },
         { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 

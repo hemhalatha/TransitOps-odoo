@@ -6,12 +6,56 @@
     right: 0;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 0 2rem;
     z-index: 99;
     border-right: none;
     border-top: none;
     border-left: none;
     border-radius: 0;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.notification-bell {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(15, 23, 42, 0.45);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.notification-bell:hover {
+    border-color: rgba(59, 130, 246, 0.45);
+    background: rgba(30, 58, 138, 0.25);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
 }
 
 .navbar-left h1 {
