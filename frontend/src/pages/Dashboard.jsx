@@ -12,7 +12,8 @@ import {
     TrendingUp,
     Fuel,
     Wrench,
-    ChevronRight
+    ChevronRight,
+    Gauge
 } from 'lucide-react';
 import api from '../services/api';
 import './Dashboard.css';
@@ -41,7 +42,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend }) => (
 const Dashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState({
-        fleet: { total: 0, in_shop: 0, available: 0, active: 0, retired: 0 },
+        fleet: { total: 0, in_shop: 0, available: 0, active: 0, retired: 0, utilizationRate: 0 },
         trips: { ongoing: 0 },
         drivers: { total: 0 },
         monthlyData: [],
@@ -71,7 +72,8 @@ const Dashboard = () => {
                         available: data?.vehicles?.available || 0,
                         active: data?.vehicles?.active || 0,
                         in_shop: data?.vehicles?.inShop || 0,
-                        retired: data?.vehicles?.retired || 0
+                        retired: data?.vehicles?.retired || 0,
+                        utilizationRate: data?.utilizationRate || 0
                     },
                     trips: {
                         ongoing: data?.trips?.active || 0
@@ -128,6 +130,12 @@ const Dashboard = () => {
                     value={stats.fleet.in_shop}
                     icon={AlertCircle}
                     color="#ef4444"
+                />
+                <StatCard
+                    title="Fleet Utilization"
+                    value={`${stats.fleet.utilizationRate || 0}%`}
+                    icon={Gauge}
+                    color="#06b6d4"
                 />
             </div>
 

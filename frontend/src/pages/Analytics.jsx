@@ -4,7 +4,7 @@ import {
     AreaChart, Area, PieChart, Pie, Cell, LineChart, Line, RadarChart, Radar,
     PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
-import { Calendar, Filter, Download, ChevronDown, X } from 'lucide-react';
+import { Calendar, Filter, Download, ChevronDown, X, Gauge } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
@@ -28,6 +28,7 @@ const Analytics = () => {
     const [roiData, setRoiData] = useState([]);
     const [costData, setCostData] = useState([]);
     const [statusData, setStatusData] = useState([]);
+    const [utilization, setUtilization] = useState({ fleet: {}, data: [] });
     const [loading, setLoading] = useState(true);
 
     const [timePeriod, setTimePeriod] = useState('30');
@@ -45,6 +46,7 @@ const Analytics = () => {
     const costBreakdownChartRef = useRef(null);
     const distanceChartRef = useRef(null);
     const typeCostChartRef = useRef(null);
+    const utilizationChartRef = useRef(null);
 
     const getDateRange = () => {
         if (timePeriod === 'all') return {};
@@ -67,15 +69,20 @@ const Analytics = () => {
         try {
             setLoading(true);
             const dateParams = getDateRange();
-            const [fuelRes, roiRes, costRes, vehicleRes] = await Promise.all([
+            const [fuelRes, roiRes, costRes, vehicleRes, utilizationRes] = await Promise.all([
                 api.get('/analytics/fuel-efficiency', { params: dateParams }),
                 api.get('/analytics/vehicle-roi', { params: dateParams }),
                 api.get('/analytics/cost-per-km', { params: dateParams }),
                 api.get('/vehicles'),
+                api.get('/analytics/fleet-utilization'),
             ]);
             setFuelData(fuelRes.data.data || []);
             setRoiData(roiRes.data.data || []);
             setCostData(costRes.data.data || []);
+            setUtilization({
+                fleet: utilizationRes.data.fleet || {},
+                data: utilizationRes.data.data || [],
+            });
 
             // Build status distribution from vehicles
             const vehicles = vehicleRes.data.data || vehicleRes.data.vehicles || [];
@@ -113,6 +120,11 @@ const Analytics = () => {
         if (vehicleTypeFilter === 'all') return costData;
         return costData.filter((d) => d.type === vehicleTypeFilter);
     }, [costData, vehicleTypeFilter]);
+
+    const filteredUtilizationData = useMemo(() => {
+        if (vehicleTypeFilter === 'all') return utilization.data;
+        return utilization.data.filter((d) => d.type === vehicleTypeFilter);
+    }, [utilization.data, vehicleTypeFilter]);
 
     // Aggregate cost by vehicle type for the type breakdown radar
     const typeCostSummary = useMemo(() => {
@@ -425,7 +437,35 @@ const Analytics = () => {
                 </div>
             )}
 
+            <div className="utilization-summary glass-card">
+                <div className="utilization-icon"><Gauge size={24} /></div>
+                <div>
+                    <p>Fleet Utilization</p>
+                    <strong>{utilization.fleet.utilizationRate || 0}%</strong>
+                </div>
+                <div className="utilization-details">
+                    <span>{utilization.fleet.onTripVehicles || 0} on trip</span>
+                    <span>{utilization.fleet.operationalVehicles || 0} operational vehicles</span>
+                </div>
+            </div>
+
             <div className="analytics-grid">
+                <div className="glass-card chart-container full-width" ref={utilizationChartRef}>
+                    <h3>Fleet Utilization by Vehicle Type</h3>
+                    <div className="chart-wrapper">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={filteredUtilizationData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <XAxis dataKey="type" stroke="#94a3b8" fontSize={12} />
+                                <YAxis stroke="#94a3b8" fontSize={12} unit="%" domain={[0, 100]} />
+                                <Tooltip {...tooltipStyle} formatter={(value) => `${value}%`} />
+                                <Legend />
+                                <Bar dataKey="utilizationRate" fill="#06b6d4" name="Utilization" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
                 {/* 1 — Vehicle ROI (full width) */}
                 <div className="glass-card chart-container full-width" ref={roiChartRef}>
                     <h3>Vehicle ROI Analysis (%)</h3>

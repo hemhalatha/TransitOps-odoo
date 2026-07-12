@@ -1,5 +1,8 @@
 const Expense = require("../models/expense.model");
 const Vehicle = require("../models/vehicle.model");
+const Notification = require("../models/notification.model");
+const { getSettings } = require("../services/settings.service");
+const { NOTIFICATION_TYPES, NOTIFICATION_SEVERITY } = require("../utils/constants");
 
 // POST /api/expenses — Create a new expense
 async function createExpense(req, res) {
@@ -15,6 +18,9 @@ async function createExpense(req, res) {
             });
         }
 
+        const settings = await getSettings();
+        const requiresApproval = amount >= settings.highExpenseApprovalThreshold;
+
         const expense = new Expense({
             vehicle,
             trip: trip || null,
@@ -23,19 +29,47 @@ async function createExpense(req, res) {
             liters: type === "fuel" ? liters : null,
             date,
             notes,
+            requiresApproval,
             createdBy: req.user._id,
         });
 
         await expense.save();
 
+        if (requiresApproval) {
+            await Notification.findOneAndUpdate(
+                { dedupeKey: `expense_approval:${expense._id}` },
+                {
+                    $set: {
+                        title: "High Expense Requires Approval",
+                        message: `A ${type} expense of ${amount} ${settings.currency} for ${vehicleDoc.name} exceeds the approval threshold of ${settings.highExpenseApprovalThreshold} ${settings.currency}.`,
+                        type: NOTIFICATION_TYPES.EXPENSE_APPROVAL,
+                        severity: NOTIFICATION_SEVERITY.WARNING,
+                        targetRoles: ["manager", "financial_analyst"],
+                        entityType: "expense",
+                        entityId: expense._id,
+                    },
+            $setOnInsert: {
+                dedupeKey: `expense_approval:${expense._id}`,
+            },
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+        }
+
         const populated = await Expense.findById(expense._id)
             .populate("vehicle", "name licensePlate type")
             .populate("createdBy", "name email");
 
+        const message = requiresApproval
+            ? `Expense created and flagged for manager approval (amount exceeds ${settings.highExpenseApprovalThreshold} ${settings.currency})`
+            : "Expense created successfully";
+
         res.status(201).json({
-            message: "Expense created successfully",
+            message,
             status: true,
             expense: populated,
+            requiresApproval,
+            approvalThreshold: settings.highExpenseApprovalThreshold,
         });
     } catch (error) {
         console.error("Create expense error:", error);

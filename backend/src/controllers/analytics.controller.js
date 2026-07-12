@@ -29,6 +29,71 @@ function buildDateRange(req, dateField) {
     return filter;
 }
 
+// GET /api/analytics/fleet-utilization — current fleet utilization by vehicle type
+// Utilization is the share of operational (non-retired) vehicles currently on a trip.
+async function getFleetUtilization(req, res) {
+    try {
+        const [statusCounts, typeCounts] = await Promise.all([
+            Vehicle.aggregate([
+                { $group: { _id: "$status", count: { $sum: 1 } } },
+            ]),
+            Vehicle.aggregate([
+                { $match: { status: { $ne: "retired" } } },
+                {
+                    $group: {
+                        _id: "$type",
+                        totalVehicles: { $sum: 1 },
+                        onTripVehicles: {
+                            $sum: { $cond: [{ $eq: ["$status", "on_trip"] }, 1, 0] },
+                        },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+        ]);
+
+        const countsByStatus = statusCounts.reduce((counts, item) => {
+            counts[item._id] = item.count;
+            return counts;
+        }, {});
+
+        const totalVehicles = statusCounts.reduce((total, item) => total + item.count, 0);
+        const retiredVehicles = countsByStatus.retired || 0;
+        const operationalVehicles = totalVehicles - retiredVehicles;
+        const onTripVehicles = countsByStatus.on_trip || 0;
+        const utilizationRate = operationalVehicles > 0
+            ? parseFloat(((onTripVehicles / operationalVehicles) * 100).toFixed(2))
+            : 0;
+
+        const data = typeCounts.map((item) => ({
+            type: item._id,
+            totalVehicles: item.totalVehicles,
+            onTripVehicles: item.onTripVehicles,
+            utilizationRate: item.totalVehicles > 0
+                ? parseFloat(((item.onTripVehicles / item.totalVehicles) * 100).toFixed(2))
+                : 0,
+        }));
+
+        res.status(200).json({
+            status: true,
+            fleet: {
+                totalVehicles,
+                activeVehicles: operationalVehicles,
+                operationalVehicles,
+                retiredVehicles,
+                onTripVehicles,
+                availableVehicles: countsByStatus.available || 0,
+                inShopVehicles: countsByStatus.in_shop || 0,
+                utilizationRate,
+            },
+            data,
+        });
+    } catch (error) {
+        console.error("Fleet utilization error:", error);
+        res.status(500).json({ message: "Internal server error", status: false });
+    }
+}
+
 // GET /api/analytics/fuel-efficiency — km/L per vehicle
 // Optional query: ?from=YYYY-MM-DD&to=YYYY-MM-DD
 async function getFuelEfficiency(req, res) {
@@ -446,6 +511,7 @@ async function exportReport(req, res) {
 }
 
 module.exports = {
+    getFleetUtilization,
     getFuelEfficiency,
     getVehicleROI,
     getCostPerKm,

@@ -1,7 +1,28 @@
 const Trip = require("../models/trip.model");
 const Vehicle = require("../models/vehicle.model");
 const Driver = require("../models/driver.model");
+const { getSettings } = require("../services/settings.service");
 const { VEHICLE_STATUS, DRIVER_STATUS, TRIP_STATUS } = require("../utils/constants");
+
+async function validateDriverForAssignment(driverDoc, settings) {
+    if (driverDoc.status === DRIVER_STATUS.SUSPENDED) {
+        return "Suspended drivers cannot be dispatched.";
+    }
+
+    if (driverDoc.status !== DRIVER_STATUS.ON_DUTY) {
+        return `Driver is currently '${driverDoc.status}' and cannot be assigned`;
+    }
+
+    if (driverDoc.licenseExpiry && driverDoc.licenseExpiry <= new Date()) {
+        return "Driver's license has expired. Cannot assign to trip.";
+    }
+
+    if (driverDoc.safetyScore < settings.minimumDriverSafetyScore) {
+        return `Driver safety score (${driverDoc.safetyScore}) is below the minimum required (${settings.minimumDriverSafetyScore}).`;
+    }
+
+    return null;
+}
 
 // POST /api/trips — Create a new trip (status defaults to "draft")
 async function createTrip(req, res) {
@@ -35,20 +56,10 @@ async function createTrip(req, res) {
             return res.status(404).json({ message: "Driver not found", status: false });
         }
 
-        // Check driver is on duty
-        if (driverDoc.status !== DRIVER_STATUS.ON_DUTY) {
-            return res.status(400).json({
-                message: `Driver is currently '${driverDoc.status}' and cannot be assigned`,
-                status: false,
-            });
-        }
-
-        // Check driver license is not expired
-        if (driverDoc.licenseExpiry && driverDoc.licenseExpiry <= new Date()) {
-            return res.status(400).json({
-                message: "Driver's license has expired. Cannot assign to trip.",
-                status: false,
-            });
+        const settings = await getSettings();
+        const driverError = await validateDriverForAssignment(driverDoc, settings);
+        if (driverError) {
+            return res.status(400).json({ message: driverError, status: false });
         }
 
         const trip = new Trip({
@@ -131,17 +142,11 @@ async function updateTrip(req, res) {
             if (!driverDoc) {
                 return res.status(404).json({ message: "Driver not found", status: false });
             }
-            if (driverDoc.status !== DRIVER_STATUS.ON_DUTY) {
-                return res.status(400).json({
-                    message: `Driver is currently '${driverDoc.status}' and cannot be assigned`,
-                    status: false,
-                });
-            }
-            if (driverDoc.licenseExpiry && driverDoc.licenseExpiry <= new Date()) {
-                return res.status(400).json({
-                    message: "Driver's license has expired. Cannot assign to trip.",
-                    status: false,
-                });
+
+            const settings = await getSettings();
+            const driverError = await validateDriverForAssignment(driverDoc, settings);
+            if (driverError) {
+                return res.status(400).json({ message: driverError, status: false });
             }
         }
 
@@ -240,12 +245,15 @@ async function updateTripStatus(req, res) {
 
             const vehicle = await Vehicle.findById(trip.vehicle);
             const driver = await Driver.findById(trip.driver);
+            const settings = await getSettings();
 
             if (vehicle.status !== VEHICLE_STATUS.AVAILABLE) {
                 return res.status(400).json({ message: `Vehicle is ${vehicle.status}, not available`, status: false });
             }
-            if (driver.status !== DRIVER_STATUS.ON_DUTY) {
-                return res.status(400).json({ message: `Driver is ${driver.status}, not on duty`, status: false });
+
+            const driverError = await validateDriverForAssignment(driver, settings);
+            if (driverError) {
+                return res.status(400).json({ message: driverError, status: false });
             }
 
             // Update trip

@@ -81,9 +81,30 @@
 
 .settings-content-grid {
     display: grid;
-    grid-template-columns: minmax(280px, 0.9fr) minmax(520px, 1.65fr);
+    grid-template-columns: minmax(300px, 0.95fr) minmax(520px, 1.65fr);
     gap: 1.35rem;
     align-items: start;
+}
+
+.settings-left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+}
+
+.settings-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 0.2rem;
+}
+
+.settings-readonly-note {
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    color: #fbbf24;
+    font-size: 0.86rem;
+    font-weight: 600;
 }
 
 .settings-panel {
@@ -240,4 +261,10 @@
     .settings-user-chip {
         justify-content: space-between;
     }
+}
+
+.settings-save-error {
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.82rem;
 }
