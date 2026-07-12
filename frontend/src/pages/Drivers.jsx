@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Edit2, Trash2, Phone, Mail, Award, Truck, X, Star } from 'lucide-react';
 import api from '../services/api';
 import Table from '../components/common/Table';
@@ -298,82 +299,85 @@ const Drivers = () => {
                 loading={loading}
                 emptyMessage="No drivers found."
             />
-
-            {/* 🔥 Modal */}
-            {showModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
+            {/* Driver Modal */}
+            {showModal && createPortal(
+                <div className="modal-overlay" role="presentation" onMouseDown={() => setShowModal(false)}>
+                    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="driver-modal-title" onMouseDown={(event) => event.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>{editingDriver ? "Edit Driver" : "Add Driver"}</h3>
+                            <h3 id="driver-modal-title">{editingDriver ? "Edit Driver" : "Add Driver"}</h3>
                             <button className="driver-modal-close" type="button" onClick={() => setShowModal(false)} aria-label="Close driver form"><X size={18} /></button>
                         </div>
 
-                        <div className="form-group">
-                            <label>Name</label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            />
+                        <div className="driver-modal-body">
+                            <div className="form-group">
+                                <label>Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Phone</label>
+                                <input
+                                    type="text"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>License Number</label>
+                                <input
+                                    type="text"
+                                    value={formData.licenseNumber}
+                                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>License Expiry</label>
+                                <input
+                                    type="date"
+                                    value={formData.licenseExpiry}
+                                    onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Status</label>
+                                <select
+                                    value={formData.status}
+                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                >
+                                    {DRIVER_STATUSES.map(status => (
+                                        <option key={status} value={status}>
+                                            {status.replace('_', ' ')}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label>Email</label>
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Phone</label>
-                            <input
-                                type="text"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>License Number</label>
-                            <input
-                                type="text"
-                                value={formData.licenseNumber}
-                                onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>License Expiry</label>
-                            <input
-                                type="date"
-                                value={formData.licenseExpiry}
-                                onChange={(e) => setFormData({ ...formData, licenseExpiry: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Status</label>
-                            <select
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            >
-                                {DRIVER_STATUSES.map(status => (
-                                    <option key={status} value={status}>
-                                        {status.replace('_', ' ')}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
                         <div className="modal-actions">
-                            <button onClick={handleSubmit}>
+                            <button type="button" onClick={handleSubmit}>
                                 {editingDriver ? "Update" : "Create"}
                             </button>
-                            <button onClick={() => setShowModal(false)}>Cancel</button>
+                            <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
