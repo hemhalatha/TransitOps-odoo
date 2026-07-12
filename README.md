@@ -1,6 +1,10 @@
-# transitOps
+# TransitOps
 
-transitOps is a full-stack fleet and logistics operations platform for managing vehicles, drivers, trips, maintenance, fuel expenses, analytics, notifications, and organization settings. The application uses a React frontend, an Express.js REST API, MongoDB persistence, JWT authentication, and role-based access control for operational workflows.
+> **Live Deployment:** [https://transitops-k2qw.onrender.com](https://transitops-k2qw.onrender.com)
+>
+> Production fleet and logistics operations platform hosted on Render.
+
+TransitOps is a full-stack fleet and logistics operations platform for managing vehicles, drivers, trips, maintenance, fuel expenses, analytics, notifications, and organization settings. The application uses a React frontend, an Express.js REST API, MongoDB persistence, JWT authentication, and role-based access control for operational workflows.
 
 ## Table of Contents
 
@@ -16,11 +20,12 @@ transitOps is a full-stack fleet and logistics operations platform for managing 
 - [Local Development](#local-development)
 - [API Modules](#api-modules)
 - [Verification](#verification)
+- [Repository Standards](#repository-standards)
 - [Operational Notes](#operational-notes)
 
 ## Overview
 
-transitOps helps logistics teams operate a transport fleet from one dashboard:
+TransitOps helps logistics teams operate a transport fleet from one dashboard:
 
 - Managers can administer the fleet, drivers, maintenance records, expenses, trips, settings, and analytics.
 - Dispatchers can coordinate trip operations while viewing fleet and driver availability.
@@ -206,7 +211,7 @@ Frontend modules follow a route/page layout:
 ## Project Structure
 
 ```text
-transitOps/
+TransitOps/
 |-- backend/
 |   |-- src/
 |   |   |-- config/
@@ -276,9 +281,13 @@ Do not commit `.env` files or production secrets.
 
 ## Deployment
 
-The production deployment is hosted on Render:
+TransitOps is deployed on Render for production access:
 
-- Live app: [https://transitops-k2qw.onrender.com](https://transitops-k2qw.onrender.com)
+| Environment | URL | Notes |
+| --- | --- | --- |
+| Production | [https://transitops-k2qw.onrender.com](https://transitops-k2qw.onrender.com) | Hosted on Render. The app may take a short moment to wake after inactivity. |
+
+Deployment configuration is captured in [render.yaml](render.yaml). Keep production secrets in Render environment variables, not in the repository.
 
 ## Local Development
 
@@ -371,9 +380,17 @@ npm run build
 ```bash
 cd backend
 node --check server.js
+npm test
 ```
 
-The backend `npm test` script is currently a placeholder and does not run an automated test suite.
+## Repository Standards
+
+- Keep secrets out of source control; use `.env` locally and provider-managed environment variables in production.
+- Validate all external API input through the backend validators before controller logic runs.
+- Keep route handlers thin and place reusable business behavior in services or focused helpers.
+- Run frontend lint/build checks and backend syntax/tests before pushing production-facing changes.
+- Preserve role-based authorization on both API routes and UI affordances.
+- Prefer small, focused commits that match a single feature, fix, or documentation update.
 
 ## Operational Notes
 
