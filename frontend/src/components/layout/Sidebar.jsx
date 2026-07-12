@@ -7,6 +7,7 @@ import {
     Fuel,
     Wrench,
     BarChart3,
+    Settings,
     LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -17,12 +18,13 @@ const Sidebar = () => {
 
     const navItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-        { name: 'Vehicles', icon: Truck, path: '/vehicles' },
+        { name: 'Fleet', icon: Truck, path: '/vehicles' },
         { name: 'Drivers', icon: Users, path: '/drivers' },
         { name: 'Trips', icon: MapPin, path: '/trips' },
-        { name: 'Expenses', icon: Fuel, path: '/expenses' },
+        { name: 'Fuel & Expenses', icon: Fuel, path: '/expenses' },
         { name: 'Maintenance', icon: Wrench, path: '/maintenance' },
         { name: 'Analytics', icon: BarChart3, path: '/analytics' },
+        { name: 'Settings', icon: Settings, path: '/settings' },
     ];
 
     return (

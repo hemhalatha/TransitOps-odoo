@@ -121,3 +121,14 @@
 .user-profile-link:hover {
     background: rgba(255, 255, 255, 0.05);
 }
+.nav-item.settings-nav-item.active {
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.72);
+    color: #fde68a;
+    box-shadow: none;
+}
+
+.nav-item.settings-nav-item.active:hover {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fff7ed;
+}

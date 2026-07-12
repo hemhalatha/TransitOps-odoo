@@ -12,6 +12,7 @@ import Maintenance from './pages/Maintenance';
 import Expenses from './pages/Expenses';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import './components/layout/Layout.css';
 
 function App() {
@@ -71,6 +72,14 @@ function App() {
             <Route path="/analytics" element={<Analytics />} />
           </Route>
 
+          {/* ⚙️ Settings - Manager only */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['manager']} />
+            }
+          >
+            <Route path="/settings" element={<Settings />} />
+          </Route>
           {/* 🔁 Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
 
