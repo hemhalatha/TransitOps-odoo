@@ -35,7 +35,7 @@ const ForgotPassword = () => {
         <div className="auth-container">
             <div className="auth-card glass-effect animate-fade-in">
                 <div className="auth-header">
-                    <div className="auth-logo">Fleet<span>Flow</span></div>
+                    <div className="auth-logo">Transit<span>Ops</span></div>
                     <h1>Forgot Password</h1>
                     <p>Enter your email to receive a reset link</p>
                 </div>
