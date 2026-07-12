@@ -17,6 +17,8 @@ copy .env.example .env
 npm run dev
 ```
 
+Make sure Docker Desktop is running. `npm run dev` starts the local MongoDB container from `docker-compose.yml` before starting the API. If MongoDB is already running elsewhere, set `MONGO_URL` in `backend/.env` and use `npm run dev:api`.
+
 Required backend environment values are documented in `backend/.env.example`.
 
 ## Frontend Setup
