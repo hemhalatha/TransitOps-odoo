@@ -1,12 +1,12 @@
-# FleetFlow
+# transitOps
 
-FleetFlow is a modular fleet and logistics management application with an Express/MongoDB backend and a Vite React frontend.
+transitOps is a modular fleet and logistics management application with an Express/MongoDB backend and a Vite React frontend.
 
 ## Project Structure
 
 - `backend/` - Express API, MongoDB models, validation, authentication, and domain routes.
 - `frontend/` - React application for fleet, driver, trip, maintenance, expense, analytics, and profile workflows.
-- `FleetFlow.postman_collection.json` - Postman collection for API exploration.
+- `transitOps.postman_collection.json` - Postman collection for API exploration.
 
 ## Backend Setup
 
