@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: fleetflow
+    name: transitops
     runtime: node
     plan: free
     region: singapore
@@ -20,3 +20,4 @@ services:
         value: 20
       - key: MONGO_CONNECT_RETRY_DELAY_MS
         value: 2000
+
